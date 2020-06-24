@@ -3,27 +3,27 @@
 ## Présentation du projet
 
 L'objectif de ce projet est la mise en place d'une IA permettant la reconnaissance du type d'un pokemon à partir d'une image.
-Pour ce faire, nous avons dû créer un ensemble de données pour permettre l'entrainement des modèles.
-À la suite de cela, nous devrons entrainer des modèles à partir de ces données.
-Pour finir, ces modèles devront être exposés par une API Web.
+Pour se faire, nous avons dû créer un ensemble de données pour permettre l'entrainement des modèles.
+À la suite de cela, nous avons entraîné entrainer des modèles à partir de ces données.
+Pour finir, ces modèles ont été exposés être exposés par une API Web.
 
 ## Création du dataset
 
-Pour la création du jeu de données, nous avons utilisé les images sur un wiki pokemon.
+Pour la création du jeu de données, nous avons utilisé les images en provenance d'un wiki pokemon.
 Celui-ci recense tous les pokemons de toutes les générations avec leurs types.
 Nous avons formaté les données à l'aide de scripts python, le résultat de ce formatage est un ensemble d'images standardisé sous une dimension, un format spécifique le PNG et d'un CSV avec les types associés aux images.
 
 ## Exploitation du dataset
 
-Certaines questions liées à l'exploitation des données se sont montrées.
+Certaines questions liées à l'exploitation des données se sont posées.
 
 - La transparence des images n'est pas utile nous pouvons donc la retirer.
 - Les labels présents dans le CSV sont des chaines des caractères, pour les exploiter il faut donc faire un dictionnaire de valeurs numérique.
-- Bien que l'analyse se base sur les types de pokemon, le fait d' avoir qu'une image de chaque pokemon ne risque-t-il pas de poser problème ?
+- Bien que l'analyse se base sur les types de pokemon, le fait de n'avoir qu'un exemplaire d'image pour chaque pokemon ne risque-t-il pas de poser problème ?
 
 ## Analyse de l'entrainement des modèles
 
-- ### Modèle perceptron
+- ### Modèle simple couche perceptron
 
 Nous avons commencé par la création d'un modèle avec une seule couche.
 Le nombre de valeurs de sortie étant de 19, la couche devra donc posséder ce même nombre de neurones.
@@ -54,27 +54,28 @@ pokemon_types_number_dic = {
 ```
 
 Par l'intermédiaire d'un changement de la valeur du **learning_rate** dans l'optimiseur. Il s'agit du **rythme** auquel le modèle apprend à chaque itération.
-Nous utilisons un optimiseur **rmsprop** pour éviter une explosion du gradient.
+Nous utilisons un optimiseur **RMSProp** pour éviter l'apparition d'un certain nombre d'optimum locaux.
 Le second paramètre sur lequel nous avons agi est le nombre **d'epochs**. Il s'agit du nombre de passages sur le modèle des données.
+La raison pour laquelle on utilise les **epochs** est: permettre l'optimisation des poids des neurones par le passage répété des données.
 Pour l'analyse, on utilise une couche **Dense** avec une **méthode d'activation softmax**.
-La couche **Dense** sort un nombre de sorties égal à son nombre de neurones.
-L'utilisation de **softmax** est motivée par la valeur qu'il retourne, il retourne une valeur entre 0 et 1 pour chaque classe (label) de notre couche. Avec notre couche de **19 neurones** softmax retourne une valeur pour chaque label.
-Pour être plus juste, en multipliant par 100 on peut avoir un pourcentage ce qui est facile à analyser pour un humain.  
+La couche **Dense** connecte tous les neurones entrant à chaque neurone sortant.
+L'utilisation de **softmax** est motivée par la valeur qu'il retourne, il retourne une valeur entre 0 et 1 pour chaque classe (label) de notre couche, mais aussi fait en sorte que la somme des valeurs soit égal à 1. Avec notre couche de **19 neurones** **softmax** retourne une valeur pour chaque label.
+Pour finir **softmax** permet d'interpréter nos résultats comme des probabilités.  
 
 ![single layer](presentation_resources/pokemon_linear_graph.png)
 
 Comme on peut le voir en plus de ne pas avoir de bon résultat en entrainement, en test nous n'arrivons pas à faire reconnaitre les données de test au modèle.
-De plus à chaque lancement les valeurs sont aléatoires.
+Le modèle semble prédire des valeurs aléatoires.
 
-Observation perceptron
+#### Observation simple couche perceptron
 
 L'entrainement de ce modèle a mis en évidence plusieurs problèmes.
 
-- Malgré les modifications sur l'optimiseur et sur le nombre d'epochs, les résultats en plus d'être peut probant seront aléatoire à chaque passage.
+En premier, malgré les modifications sur l'optimiseur et sur le nombre d'epochs, les résultats en plus d'être peut probant les prédictions du modèle sont aléatoire.
 
-- En premier, un modèle avec une seule couche n'est pas assez complexe pour permettre d'observer des similitudes de façon efficace au sein des données d'entrainement.
+En second, un modèle avec une seule couche n'est pas assez complexe pour permettre d'observer des similitudes de façon efficace au sein des données d'entrainement.
 
-- En second, le faible nombre d'images dans le jeu données pose un gros problème. Avoir que **890 images** et avoir **qu'une image de chaque pokemon** rend le jeu de données difficilement généralisable. Avoir qu'une image de chaque pokemon pose un problème, le jeu de données d'entrainement et de test sont presque sans liens. Et le faible nombre de données diminue de nombre d'information que le modèle peut extraire.
+En troisième, le faible nombre d'images dans le jeu données pose un gros problème. N'avoir que **890 images** et n'avoir **qu'une image de chaque pokemon** rend le jeu de données difficilement généralisable. Avoir qu'une image de chaque pokemon pose un problème, le jeu de données d'entrainement et de test sont presque sans liens. Et le faible nombre de données diminue le nombre d'information que le modèle peut extraire.
 
 - ### Modèle perceptron multicouche
 
@@ -84,15 +85,15 @@ Le choix d' une activation **ReLU** qui est assez standard est motivé par la vo
 
 ![multicouche 2 types](presentation_resources/pokemon_multi_layer_perceptron_2_types.png)
 
-Malheureusement comment on peut le constater, les résultats ne sont pas ceux attendus. Les données mettent en évidence que le jeu de données est peu fiable.
+Malheureusement comme on peut le constater, les résultats ne sont pas ceux attendus. Le modèle est peut fiable. La cause probable est le manque de fiabilité du jeu de données.
 
 Pour simplifier le problème, nous avons décidé de retirer la détection de 2 types d'un pokemon en faveur de la détection d'un seul type.
 
 ![multicouche 1 type](presentation_resources/pokemon_multi_layer_perceptron_1_types.png)
 
-Les résultats sont meilleurs après la simplification du problème, toutefois la précision est toujours à la hauteur de nos attentes.
+Les résultats sont meilleurs après la simplification du problème, toutefois la précision n'est toujours pas à la hauteur de nos attentes.
 
-Les aléas des phases de test
+#### Les aléas des phases de test
 
 Durant les modifications des différents paramètres, des problèmes sont apparus. Ces exemples ci-dessous sont des effectués avec l'entrainement avec un type à détecter.
 
@@ -101,7 +102,7 @@ Le surentrainement:
 ![Surentrainement](presentation_resources/pokemon_multi_layer_perceptron_1_types_overfiting.png)
 
 Le surentrainement est visible sur le graphique ci-dessus.
-On le voit grâce à la **précision de 100% en entrainement** et à **l'augmentation de la loss** pour les données de test.
+On le voit grâce à la **précision de 100% en entrainement** et à la **précision à 2% en test**.
 Pour faire simple, le modèle est tellement calibré sur les données d'entrainement qu'il a perdu toute capacité de généralisation.
 
 Le manque d'entrainement:
@@ -110,9 +111,9 @@ Le manque d'entrainement:
 
 Le manque d'entrainement est visible sur le graphique ci-dessus.
 On peut constater que la précision en est à un niveau assez bas.
-On constate aussi que les courbes de **train loss** et **test loss** qui ne s'approche jamais.
+On constate aussi que les courbes de **train loss** et **test loss** stop leurs diminutions assez rapidement. Cela implique que le modèle n'apprend plus rapidement.
 
-Observation perceptron multicouche
+### Observation d'un modèle perceptron multicouche
 
 Nous avons dans ce second modèle pu confirmer que le jeu de données va et nous pose problème. La complexité du modèle n'est toujours pas assez complexe.
 Une simplification du problème pour juste détecter 1 type, mais pas deux a été effectuée.
@@ -120,7 +121,7 @@ Une simplification du problème pour juste détecter 1 type, mais pas deux a ét
 - ### Modèle CNN
 
 Pour le problème des données nous avons pris le risque de dupliquer les données quitte à ce que certaines données d'entrainement soient dans les données de test.
-La raison du choix du CNN est liée au contexte de son utilisation. Le CNN est un modèle d'apprentissage multicouche précisément utilisé pour l'analyse des images.
+La raison du choix du CNN est liée au contexte de son utilisation. Le CNN est un modèle d'apprentissage multicouche optimisé pour l'analyse des images par ordinateur.
 Ce modèle nous permet de récupérer plus d'information venant des images du jeu de données.
 Le CNN est un modèle perceptron multicouche qui utilise la convolution.
 La convolution consiste en l'utilisation de filtre sur l'image pour permettre d'altérer ladite image.
@@ -128,11 +129,11 @@ Ces altérations sont utiles au modèle pour extraire des données.
 
 ![CNN](presentation_resources/pokemon_cnn_graph.png)
 
-Comment nous pouvons le constater les résultats sont bien meilleurs pour ce modèle.
+Comme nous pouvons le constater les résultats sont bien meilleurs pour ce modèle.
 
-Observation CNN
+### Observation CNN
 
-Le CNN résout beaucoup de problèmes vus précédemment. Il est toutefois bon de noter que, la présence de données d'entrainement dans le jeu de données de test expose des résultats potentiellement biaisés.
+Le CNN résout beaucoup de problèmes vus précédemment. Il est toutefois bon de noter que, la présence de données d'entrainement dans le jeu de données de test expose des résultats biaisés.
 
 ## Conclusion et retour d'expérience
 
