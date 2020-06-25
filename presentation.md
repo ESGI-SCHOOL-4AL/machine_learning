@@ -1,25 +1,25 @@
-# Dectection de type pokemon
+# Dectection de type Pokémon
 
 ## Présentation du projet
 
-L'objectif de ce projet est la mise en place d'une IA permettant la reconnaissance du type d'un pokemon à partir d'une image.
+L'objectif de ce projet est la mise en place d'une IA permettant la reconnaissance du type d'un Pokémon à partir d'une image.
 Pour se faire, nous avons dû créer un ensemble de données pour permettre l'entrainement des modèles.
-À la suite de cela, nous avons entraîné entrainer des modèles à partir de ces données.
-Pour finir, ces modèles ont été exposés être exposés par une API Web.
+À la suite de cela, nous avons entraîné des modèles à partir de ces données.
+Pour finir, ces modèles ont été exposés par une API Web.
 
 ## Création du dataset
 
-Pour la création du jeu de données, nous avons utilisé les images en provenance d'un wiki pokemon.
-Celui-ci recense tous les pokemons de toutes les générations avec leurs types.
-Nous avons formaté les données à l'aide de scripts python, le résultat de ce formatage est un ensemble d'images standardisé sous une dimension, un format spécifique le PNG et d'un CSV avec les types associés aux images.
+Pour la création du jeu de données, nous avons utilisé les images en provenance d'un wiki Pokémon.
+Celui-ci recense tous les Pokémons de toutes les générations avec leurs types.
+Nous avons formaté les données à l'aide de scripts python, le résultat de ce formatage est un ensemble d'images standardisé sous une dimension, un format spécifique (PNG) et d'un CSV avec les types associés aux images.
 
 ## Exploitation du dataset
 
 Certaines questions liées à l'exploitation des données se sont posées.
 
-- La transparence des images n'est pas utile nous pouvons donc la retirer.
+- La transparence des images n'est pas utile, nous pouvons donc la retirer.
 - Les labels présents dans le CSV sont des chaines des caractères, pour les exploiter il faut donc faire un dictionnaire de valeurs numérique.
-- Bien que l'analyse se base sur les types de pokemon, le fait de n'avoir qu'un exemplaire d'image pour chaque pokemon ne risque-t-il pas de poser problème ?
+- Bien que l'analyse se base sur les types de Pokémon, le fait de n'avoir qu'un exemplaire d'image pour chaque Pokémon ne risque-t-il pas de poser problème ?
 
 ## Analyse de l'entrainement des modèles
 
@@ -53,41 +53,41 @@ pokemon_types_number_dic = {
 }
 ```
 
-Par l'intermédiaire d'un changement de la valeur du **learning_rate** dans l'optimiseur. Il s'agit du **rythme** auquel le modèle apprend à chaque itération.
+Par l'intermédiaire d'un changement de la valeur du **learning_rate** dans l'optimiseur, on peut modifier la capacité d'apprentissage des neurones. Il s'agit du **rythme** auquel le modèle apprend à chaque itération.
 Nous utilisons un optimiseur **RMSProp** pour éviter l'apparition d'un certain nombre d'optimum locaux.
 Le second paramètre sur lequel nous avons agi est le nombre **d'epochs**. Il s'agit du nombre de passages sur le modèle des données.
-La raison pour laquelle on utilise les **epochs** est: permettre l'optimisation des poids des neurones par le passage répété des données.
+L'utilisation des **epochs** nous permet l'optimisation des poids des neurones par le passage répété des données.
 Pour l'analyse, on utilise une couche **Dense** avec une **méthode d'activation softmax**.
 La couche **Dense** connecte tous les neurones entrant à chaque neurone sortant.
-L'utilisation de **softmax** est motivée par la valeur qu'il retourne, il retourne une valeur entre 0 et 1 pour chaque classe (label) de notre couche, mais aussi fait en sorte que la somme des valeurs soit égal à 1. Avec notre couche de **19 neurones** **softmax** retourne une valeur pour chaque label.
+L'utilisation de **softmax** est motivée par la valeur qu'il retourne, il retourne une valeur entre 0 et 1 pour chaque classe (label) de notre couche, mais aussi fait en sorte que la somme des valeurs soit égale à 1. Avec notre couche de **19 neurones**, **softmax** retourne une valeur pour chaque label.
 Pour finir **softmax** permet d'interpréter nos résultats comme des probabilités.  
 
 ![single layer](presentation_resources/pokemon_linear_graph.png)
 
-Comme on peut le voir en plus de ne pas avoir de bon résultat en entrainement, en test nous n'arrivons pas à faire reconnaitre les données de test au modèle.
+Comme on peut le voir, en plus de ne pas avoir de bon résultat en entrainement, en test nous n'arrivons pas à faire reconnaitre les données de test au modèle.
 Le modèle semble prédire des valeurs aléatoires.
 
 #### Observation simple couche perceptron
 
 L'entrainement de ce modèle a mis en évidence plusieurs problèmes.
 
-En premier, malgré les modifications sur l'optimiseur et sur le nombre d'epochs, les résultats en plus d'être peut probant les prédictions du modèle sont aléatoire.
+Premièrement, malgré les modifications sur l'optimiseur et sur le nombre d'epochs, les résultats en plus d'être peut probant les prédictions du modèle sont aléatoire.
 
-En second, un modèle avec une seule couche n'est pas assez complexe pour permettre d'observer des similitudes de façon efficace au sein des données d'entrainement.
+Ensuite, un modèle avec une seule couche n'est pas assez complexe pour permettre d'observer des similitudes de façon efficace au sein des données d'entrainement.
 
-En troisième, le faible nombre d'images dans le jeu données pose un gros problème. N'avoir que **890 images** et n'avoir **qu'une image de chaque pokemon** rend le jeu de données difficilement généralisable. Avoir qu'une image de chaque pokemon pose un problème, le jeu de données d'entrainement et de test sont presque sans liens. Et le faible nombre de données diminue le nombre d'information que le modèle peut extraire.
+Enfin, le faible nombre d'images dans le jeu données pose un gros problème. N'avoir que **890 images** et n'avoir **qu'une image de chaque Pokémon** rend le jeu de données difficilement généralisable. Avoir qu'une image de chaque Pokémon pose un problème, le jeu de données d'entrainement et de test sont presque sans liens. Et le faible nombre de données diminue le nombre d'information que le modèle peut extraire.
 
 - ### Modèle perceptron multicouche
 
 À partir du précédent modèle, nous avons ajouté des couches supplémentaires pour complexifier le modèle.
 Les couches ajoutées sont toujours des **Dense**, mais avec une activation **ReLU**.
-Le choix d' une activation **ReLU** qui est assez standard est motivé par la volonté d'éviter la saturation du gradient. Pour faire simple, c'est pour éviter que le modèle tire des conclusions trop vite.
+Le choix d'une activation **ReLU**, qui est assez standard, est motivé par la volonté d'éviter la saturation du gradient. Pour faire simple, c'est pour éviter que le modèle tire des conclusions trop vite.
 
 ![multicouche 2 types](presentation_resources/pokemon_multi_layer_perceptron_2_types.png)
 
-Malheureusement comme on peut le constater, les résultats ne sont pas ceux attendus. Le modèle est peut fiable. La cause probable est le manque de fiabilité du jeu de données.
+Malheureusement comme on peut le constater, les résultats ne sont pas ceux attendus. Le modèle est peu fiable. La cause probable est le manque de fiabilité du jeu de données.
 
-Pour simplifier le problème, nous avons décidé de retirer la détection de 2 types d'un pokemon en faveur de la détection d'un seul type.
+Pour simplifier le problème, nous avons décidé de retirer la détection de 2 types d'un Pokémon en faveur de la détection d'un seul type.
 
 ![multicouche 1 type](presentation_resources/pokemon_multi_layer_perceptron_1_types.png)
 
@@ -102,7 +102,7 @@ Le surentrainement:
 ![Surentrainement](presentation_resources/pokemon_multi_layer_perceptron_1_types_overfiting.png)
 
 Le surentrainement est visible sur le graphique ci-dessus.
-On le voit grâce à la **précision de 100% en entrainement** et à la **précision à 2% en test**.
+On le voit grâce à la **précision de 100% en entrainement** et à la **précision à 20% en test**.
 Pour faire simple, le modèle est tellement calibré sur les données d'entrainement qu'il a perdu toute capacité de généralisation.
 
 Le manque d'entrainement:
@@ -111,12 +111,12 @@ Le manque d'entrainement:
 
 Le manque d'entrainement est visible sur le graphique ci-dessus.
 On peut constater que la précision en est à un niveau assez bas.
-On constate aussi que les courbes de **train loss** et **test loss** stop leurs diminutions assez rapidement. Cela implique que le modèle n'apprend plus rapidement.
+On constate aussi que les courbes de **train loss** et **test loss** stoppent leurs diminutions assez rapidement. Cela implique que le modèle n'apprend plus rapidement.
 
 ### Observation d'un modèle perceptron multicouche
 
-Nous avons dans ce second modèle pu confirmer que le jeu de données va et nous pose problème. La complexité du modèle n'est toujours pas assez complexe.
-Une simplification du problème pour juste détecter 1 type, mais pas deux a été effectuée.
+Nous avons dans ce second modèle pu confirmer que le jeu de données nous pose problème. La complexité du modèle n'est toujours pas assez élevée.
+Une simplification du problème pour juste détecter 1 type, mais pas deux, a été effectuée.
 
 - ### Modèle CNN
 
