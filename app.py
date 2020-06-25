@@ -8,33 +8,34 @@ from io import BytesIO
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras import backend as K
 
 app = Flask(__name__)
 
 # input image dimensions 
 IMG_ROWS, IMG_COLS = 32, 32
 
-DIC_POKEMON_TYPE = {
-    'Bug' : 0,
-    'Dark' : 1,
-    'Dragon' : 2,
-    'Electric' : 3,
-    'Fairy' : 4,
-    'Fighting' : 5,
-    'Fire' : 6,
-    'Flying' : 7,
-    'Ghost' : 8,
-    'Grass' : 9,
-    'Ground' : 10,
-    'Ice' : 11,
-    'Normal' : 12,
-    'Poison' : 13,
-    'Psychic' : 14,
-    'Rock' : 15,
-    'Steel' : 16,
-    'Water' : 17,
-    18 : 18
-}
+ARRAY_POKEMON_TYPE = [
+    'Bug',
+    'Dark',
+    'Dragon',
+    'Electric',
+    'Fairy',
+    'Fighting',
+    'Fire',
+    'Flying',
+    'Ghost',
+    'Grass',
+    'Ground',
+    'Ice',
+    'Normal',
+    'Poison',
+    'Psychic',
+    'Rock',
+    'Steel',
+    'Water',
+    18
+]
 
 class BadDimensionError(Exception):
     def __init__(self, *args):
@@ -68,6 +69,27 @@ def convert_io_string_to_image_rgb(io_string):
 
     return np_array_file
 
+def convert_io_string_to_image_rgb_cnn(io_string):
+    file = Image.open(io_string)
+
+    if file.size != (IMG_ROWS, IMG_COLS):
+        raise BadDimensionError("The image should have a size of: " + str(IMG_ROWS) + "X" + str(IMG_COLS))
+
+    # Virer alpha
+    file = file.convert('RGB')
+    data = np.array( file, dtype='uint8' )
+
+    if K.image_data_format() == 'channels_first':
+        data = data.reshape(1, 3, IMG_ROWS, IMG_COLS)
+    else:
+        data = data.reshape(1, IMG_ROWS, IMG_COLS, 3)
+    
+    data = data.astype('float32')
+    data /= 255
+
+    return data
+
+
 @app.route('/perceptron', methods=["POST"])
 def analyse_image_perceptron():
     file = request.files['image']
@@ -79,6 +101,7 @@ def analyse_image_perceptron():
             mimetype='application/json'
         )
 
+    tf.keras.backend.clear_session()
     SINGLE_LAYER_MODEL = tf.keras.models.load_model('models/pokemon_linear_perceptron_model.h5')
     SINGLE_LAYER_MODEL._make_predict_function()
 
@@ -94,7 +117,7 @@ def analyse_image_perceptron():
 
     labels_predict = SINGLE_LAYER_MODEL.predict(file_image_rgb)
     
-    label_predict = DIC_POKEMON_TYPE[np.argmax(labels_predict)]
+    label_predict = ARRAY_POKEMON_TYPE[np.argmax(labels_predict)]
 
     if label_predict == 18:
         return app.response_class(
@@ -120,7 +143,8 @@ def analyse_image_multi_layers_perceptron():
             mimetype='application/json'
         )
 
-    MULTI_LAYER_MODEL = keras.models.load_model('models/pokemon_multi_layer.h5')
+    tf.keras.backend.clear_session()
+    MULTI_LAYER_MODEL = tf.keras.models.load_model('models/pokemon_multi_layer.h5')
     MULTI_LAYER_MODEL._make_predict_function()
 
     try:
@@ -135,7 +159,8 @@ def analyse_image_multi_layers_perceptron():
 
     labels_predict = MULTI_LAYER_MODEL.predict(file_image_rgb)
 
-    label_predict = DIC_POKEMON_TYPE[np.argmax(labels_predict)]
+
+    label_predict = ARRAY_POKEMON_TYPE[np.argmax(labels_predict)]
     
     if label_predict == 18:
         return app.response_class(
@@ -161,11 +186,12 @@ def analyse_image_cnn():
             mimetype='application/json'
         )
 
-    CNN_MODEL = keras.models.load_model('models/pokemon_cnn.h5')
+    tf.keras.backend.clear_session()
+    CNN_MODEL = tf.keras.models.load_model('models/pokemon_cnn.h5')
     CNN_MODEL._make_predict_function()
 
     try:
-        file_image_rgb = convert_io_string_to_image_rgb(file.stream)
+        file_image_rgb = convert_io_string_to_image_rgb_cnn(file.stream)
     
     except BadDimensionError as error:
         return app.response_class(
@@ -176,7 +202,7 @@ def analyse_image_cnn():
 
     labels_predict = CNN_MODEL.predict(file_image_rgb)
 
-    label_predict = DIC_POKEMON_TYPE[np.argmax(labels_predict)]
+    label_predict = ARRAY_POKEMON_TYPE[np.argmax(labels_predict)]
 
     if label_predict == 18:
         return app.response_class(
@@ -190,4 +216,3 @@ def analyse_image_cnn():
             status=200,
             mimetype='application/json'
         )
-
